@@ -1,0 +1,75 @@
+import pandas as pd
+
+
+# Importing the train dataset
+dataset=pd.read_csv('train.csv')
+x=dataset.iloc[:,4:6]
+x['Fare']=dataset.iloc[:,9]
+x['Pclass']=dataset.iloc[:,2]
+X_train=x.values
+
+y_train=dataset.iloc[:,1]
+
+# Importing the test dataset
+dataset_test=pd.read_csv('test.csv')
+x_testt=dataset_test.iloc[:,3:5]
+x_testt['Fare']=dataset_test.iloc[:,8]
+x_testt['Pclass']=dataset_test.iloc[:,1]
+X_testt=x_testt.values
+
+
+
+
+#Taking care of missing data
+from sklearn.preprocessing import Imputer
+imputer=Imputer(strategy="mean",axis=0)
+imputer=imputer.fit(X_train[:,1:2])
+X_train[:,1:2]=imputer.transform(X_train[:,1:2])
+
+imputer_test=Imputer(strategy="mean",axis=0)
+imputer_test=imputer_test.fit(X_testt[:,1:3])
+X_testt[:,1:3]=imputer_test.transform(X_testt[:,1:3])
+
+
+
+#Encoding Catagorical data
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+le=LabelEncoder()
+le_test=LabelEncoder()
+X_train[:,0]=le.fit_transform(X_train[:,0])
+X_testt[:,0]=le_test.fit_transform(X_testt[:,0])
+le1=LabelEncoder()
+le1_test=LabelEncoder()
+X_train[:,3]=le1.fit_transform(X_train[:,3])
+X_testt[:,3]=le1_test.fit_transform(X_testt[:,3])
+
+ohe=OneHotEncoder(categorical_features=[3])
+ohe_test=OneHotEncoder(categorical_features=[3])
+
+X_train=ohe.fit_transform(X_train).toarray()
+X_testt=ohe_test.fit_transform(X_testt).toarray()
+
+X_train=X_train[:,1:]
+X_testt=X_testt[:,1:]
+
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler
+sc=StandardScaler()
+X_train=sc.fit_transform(X_train)
+X_testt=sc.transform(X_testt)
+
+# Fitting Logistic Regression to the Training set
+from sklearn.svm import SVC
+classifier = SVC(kernel = 'rbf', random_state = 0, C=55, degree=2,gamma=8)
+classifier.fit(X_train, y_train)
+
+
+
+# Predicting the Test set results
+y_pred=classifier.predict(X_testt)
+
+
+# Making the Confusion Matrix
+#from sklearn.metrics import confusion_matrix
+#cm=confusion_matrix(y_test,y_pred)
