@@ -1,0 +1,108 @@
+# Importing the Keras libraries and packages
+from keras.models import Sequential
+from keras.layers import Convolution2D
+from keras.layers import MaxPooling2D
+from keras.layers import Flatten
+from keras.layers import Dense
+
+# Initialising the CNN
+classifier = Sequential()
+
+# Step 1 - Convolution
+classifier.add(Convolution2D(32, 3, 3, input_shape = (64, 64, 3), activation = 'relu'))
+
+# Step 2 - Pooling
+classifier.add(MaxPooling2D(pool_size = (2, 2)))
+
+# Adding a second convolutional layer
+classifier.add(Convolution2D(32, 3, 3, activation = 'relu'))
+classifier.add(MaxPooling2D(pool_size = (2, 2)))
+
+# Step 3 - Flattening
+classifier.add(Flatten())
+
+# Step 4 - Full connection
+classifier.add(Dense(output_dim = 128, activation = 'relu'))
+classifier.add(Dense(output_dim = 1, activation = 'softmax'))
+
+# Compiling the CNN
+classifier.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics = ['accuracy'])
+
+# Part 2 - Fitting the CNN to the images
+
+from keras.preprocessing.image import ImageDataGenerator
+
+#from PIL import Image
+#import numpy as np
+#import pandas as pd
+#for i in range(1,1302) :
+#    imagg="C:\\Users\\sindh\\Downloads\\DL# Beginner\\train\\Img-"+str(i)+".jpg"
+#    print(i)
+#    img = Image.open(imagg)
+#    arr = np.array(img)
+#x_train=arr   
+import numpy as np
+import pandas as pd 
+#import seaborn as sns
+#import matplotlib.pyplot as plt
+from keras.preprocessing import image
+
+trainn = pd.read_csv('C:\\Users\\sindh\\Downloads\\DL# Beginner\\meta-data\\train.csv')
+testt = pd.read_csv('C:\\Users\\sindh\\Downloads\\DL# Beginner\\meta-data\\test.csv')
+
+TRAIN_PATH = './train/' 
+TEST_PATH = './test/'
+
+#from PIL import Image
+#from imageio import imread
+#from skimage.transform import resize
+#import cv2
+#from tqdm import tqdm
+
+# defining a function to read images
+def read_img(img_path):
+    img = image.load_img(img_path, target_size=(64, 64, 3))
+    img = image.img_to_array(img)
+
+    return img
+
+# reading the images
+train_img = []
+for img_path in trainn.Image_id.values :
+    train_img.append(read_img(TRAIN_PATH + img_path))
+from sklearn.preprocessing import LabelEncoder
+lb = LabelEncoder()
+lb.fit(trainn.Animal.values)
+y = lb.transform(trainn.Animal.values)
+
+lb = LabelEncoder()
+lb.fit(testt.Animal.values)
+y = lb.transform(testt.Animal.values)
+ 
+#y_train=data = pd.read_csv("C:\\Users\\sindh\\Downloads\\DL# Beginner\\meta-data\\train.csv") 
+
+X_train = np.array(train_img, np.float32)
+X_train.shape
+train_datagen = ImageDataGenerator(rescale = 1./255,
+                                   shear_range = 0.2,
+                                   zoom_range = 0.2,
+                                   horizontal_flip = True)
+
+test_datagen = ImageDataGenerator(rescale = 1./255)
+training_set=train_datagen.flow(X_train, y, batch_size=32)
+
+#training_set = train_datagen.flow_from_directory('train',
+#                                                 target_size = (64, 64),
+#                                                 batch_size = 32,
+#                                                 class_mode = 'categorical')
+#
+#test_set = test_datagen.flow_from_directory('test',
+#                                            target_size = (64, 64),
+#                                            batch_size = 32,
+#                                            class_mode = 'categorical')
+
+classifier.fit_generator(training_set,
+                         samples_per_epoch = 13000,
+                         nb_epoch = 1,
+                         validation_data = test_set,
+                         nb_val_samples = 6000)
